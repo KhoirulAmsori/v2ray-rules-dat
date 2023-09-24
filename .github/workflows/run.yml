@@ -1,15 +1,11 @@
-name: Generate Report
-
+name: Print some text every 3rd minute
 on:
   schedule:
-    - cron: "* * * * *"
+    - cron: '* * * * *'
 
 jobs:
-  generate:
-    runs-on: ubuntu-latest
+  print_text:
+    runs-on: 'ubuntu-20.04'
     steps:
-    # Reduced the code for brevity
-    - name: Generate report and Send email
-      run: |
-        generate-report.sh 
-        send-email.sh
+      -name: Print some text
+       run: echo "Periodically printing passages"
