@@ -1,14 +1,101 @@
-name: Generate Report
-
+name: Build
 on:
- workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
     steps:
-    # Reduced the code for brevity
-    - name: Generate report and Send email
-      run: |
-        generate-report.sh 
-        send-email.sh
+      - name: Setup Go 1.x.y
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+          check-latest: true
+      
+      - name: Set timezone to WIB Jakarta
+        uses: szenius/set-timezone@v1.2
+        with:
+          timezoneLinux: "Asia/Jakarta"
+          timezoneMacos: "Asia/Jakarta"
+          timezoneWindows: "Indonesia Standard Time"
+
+      - name: Set variables
+        run: |
+          echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+          echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+          echo "OISD_SMALL=https://small.oisd.nl/dnsmasq" >> $GITHUB_ENV
+          echo "OISD_NSFW=https://nsfw.oisd.nl/dnsmasq" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Checkout Loyalsoldier/domain-list-custom
+        uses: actions/checkout@v3
+        with:
+          repository: Loyalsoldier/domain-list-custom
+          path: custom
+
+      - name: Checkout v2fly/domain-list-community
+        uses: actions/checkout@v3
+        with:
+          repository: v2fly/domain-list-community
+          path: community
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: ./custom/go.mod
+
+      - name: Create lists
+        run: |
+          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
+          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
+          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
+          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-nsfw.txt
+
+      - name: Build geosite.dat file
+        run: |
+          cd custom || exit 1
+          go run ./ --datapath=../community/data
+
+      - name: Move files
+        run: |
+          install -Dp ./custom/publish/geosite.dat ./publish/GeoSite.dat
+          cd ./publish || exit 1
+
+      - name: Release and upload assets
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          name: ${{ env.RELEASE_NAME }}
+          tag_name: ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          files: |
+            ./publish/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Git push assets to "release" branch
+        run: |
+          cd publish || exit 1
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b release
+          git add .
+          git commit -m "${{ env.RELEASE_NAME }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u origin release
+
+      - name: Purge jsdelivr CDN
+        run: |
+          cd publish || exit 1
+          for file in $(ls); do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+          done
+
+      - name: Delete Old Release
+        uses: dev-drprasad/delete-older-releases@v0.2.1
+        with:
+          repo: KhoirulAmsori/v2ray-rules-dat
+          keep_latest: 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
