@@ -1,6 +1,6 @@
 # Clash GeoSite
 
-Kustom GeoSite yang hanya berisi `OISD-SMALL` dan `OISD-NFSW`, mungkin kedepannya ada penambahan/pengurangan daftar. Pembaruan setiap hari Sabtu jam 24:00.
+Kustom GeoSite yang hanya berisi `OISD-SMALL` dan `OISD-NFSW`, mungkin kedepannya ada penambahan/pengurangan daftar.
 
 ### Isi GeoSite:
 - OISD-SMALL
