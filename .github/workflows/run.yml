@@ -6,12 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go 1.x.y
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.20'
-          check-latest: true
-      
       - name: Set timezone to WIB Jakarta
         uses: szenius/set-timezone@v1.2
         with:
@@ -40,9 +34,10 @@ jobs:
           path: community
 
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: ./custom/go.mod
+          cache-dependency-path: ./custom/go.sum
 
       - name: Create lists
         run: |
@@ -59,6 +54,14 @@ jobs:
       - name: Move files
         run: |
           install -Dp ./custom/publish/geosite.dat ./publish/GeoSite.dat
+          cd ./publish || exit 1
+
+      - name: Convert to Sing-Box geoassets
+        run: |
+          wget https://github.com/malikshi/Notes/releases/download/v2box/v2box
+          chmod +x v2box
+          ./v2box migrate geosite -i ./publish/GeoSite.dat -o GeoSite.db
+          mv -f GeoSite.db ./publish/
           cd ./publish || exit 1
 
       - name: Release and upload assets
