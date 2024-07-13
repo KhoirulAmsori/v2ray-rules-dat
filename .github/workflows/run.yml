@@ -39,6 +39,10 @@ jobs:
           go-version-file: ./custom/go.mod
           cache-dependency-path: ./custom/go.sum
 
+      - name: Get geoip.dat relative files
+        run: |
+          wget https://github.com/malikshi/geoip/raw/release/geoip.dat
+
       - name: Create lists
         run: |
           curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
@@ -53,6 +57,7 @@ jobs:
 
       - name: Move files
         run: |
+          install -Dp ./geoip.dat ./publish/geoip.dat
           install -Dp ./custom/publish/geosite.dat ./publish/GeoSite.dat
           cd ./publish || exit 1
 
@@ -60,7 +65,9 @@ jobs:
         run: |
           wget https://github.com/malikshi/Notes/releases/download/v2box/v2box
           chmod +x v2box
+          ./v2box migrate geoip -i ./publish/geoip.dat -o geoip.db
           ./v2box migrate geosite -i ./publish/GeoSite.dat -o GeoSite.db
+          mv -f geoip.db ./publish/
           mv -f GeoSite.db ./publish/
           cd ./publish || exit 1
 
