@@ -26,6 +26,12 @@ jobs:
           repository: Loyalsoldier/domain-list-custom
           path: custom
 
+      - name: Checkout v2fly/domain-list-community
+        uses: actions/checkout@v4
+        with:
+          repository: v2fly/domain-list-community
+          path: community
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -38,13 +44,12 @@ jobs:
 
       - name: Create lists
         run: |
-          # curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
           curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
 
       - name: Build geosite.dat file
         run: |
           cd custom || exit 1
-          go run ./
+          go run ./ --datapath=../community/data
 
       - name: Move files
         run: |
