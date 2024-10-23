@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set timezone to WIB Jakarta
-        uses: szenius/set-timezone@v1.2
+        uses: szenius/set-timezone@v2.0
         with:
           timezoneLinux: "Asia/Jakarta"
           timezoneMacos: "Asia/Jakarta"
@@ -18,7 +18,6 @@ jobs:
           echo "RELEASE_NAME=Released on $(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "TAG_NAME=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
           echo "OISD_SMALL=https://small.oisd.nl/dnsmasq" >> $GITHUB_ENV
-          echo "OISD_NSFW=https://nsfw.oisd.nl/dnsmasq" >> $GITHUB_ENV
         shell: bash
 
       - name: Checkout Loyalsoldier/domain-list-custom
@@ -41,14 +40,12 @@ jobs:
 
       - name: Get geoip.dat relative files
         run: |
-          wget https://github.com/malikshi/geoip/raw/release/geoip.dat
+          wget https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat
 
       - name: Create lists
         run: |
           curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
-          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
-          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-nsfw
-          curl -sSL $OISD_NSFW | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-nsfw.txt
+          # curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
 
       - name: Build geosite.dat file
         run: |
@@ -59,16 +56,6 @@ jobs:
         run: |
           install -Dp ./geoip.dat ./publish/GeoIP.dat
           install -Dp ./custom/publish/geosite.dat ./publish/GeoSite.dat
-          cd ./publish || exit 1
-
-      - name: Convert to Sing-Box geoassets
-        run: |
-          wget https://github.com/malikshi/Notes/releases/download/v2box/v2box
-          chmod +x v2box
-          ./v2box migrate geoip -i ./publish/GeoIP.dat -o GeoIP.db
-          ./v2box migrate geosite -i ./publish/GeoSite.dat -o GeoSite.db
-          mv -f GeoIP.db ./publish/
-          mv -f GeoSite.db ./publish/
           cd ./publish || exit 1
 
       - name: Release and upload assets
