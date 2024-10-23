@@ -37,20 +37,6 @@ jobs:
           repository: v2fly/domain-list-community
           path: community
 
-      - name: Configure sparse checkout
-        run: |
-          cd community
-          git sparse-checkout init
-          echo "/*" > .git/info/sparse-checkout
-          echo "!data/" >> .git/info/sparse-checkout
-          git read-tree -mu HEAD
-
-      - name: Verify sparse checkout
-        run: |
-          mkdir -p community/data/
-          ls -la community
-          ls -la community/data/
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
