@@ -50,7 +50,7 @@ jobs:
       - name: Build geosite.dat file
         run: |
           cd custom || exit 1
-          go run ./ --datapath=../custom
+          go run ./ --datapath=../
 
       - name: Move files
         run: |
