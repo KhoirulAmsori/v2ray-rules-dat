@@ -44,7 +44,7 @@ jobs:
 
       - name: Create lists
         run: |
-          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > oisd-small.txt
+          curl -sSL $OISD_SMALL | perl -ne '/^server=\/([^\/]+)\// && print "$1\n"' > ./community/data/oisd-small
 
       - name: Build geosite.dat file
         run: |
