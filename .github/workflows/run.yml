@@ -1,6 +1,9 @@
-name: Build
+name: Build GEO asset
 on:
+  schedule:
+    - cron: "0 5 * * *"
   repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
